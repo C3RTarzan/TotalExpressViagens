@@ -1,0 +1,13 @@
+{
+    "name": "Automatizador",
+    "version": "1.0",
+    "description": "Automatiza o preenchimento e envio de números",
+    "manifest_version": 3,
+    "background" : {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "index.html"
+    },
+    "permissions": ["storage", "activeTab", "scripting"]
+}
