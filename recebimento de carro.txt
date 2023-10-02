@@ -1,0 +1,457 @@
+function onEdit(e){
+  const sheetName = "Coleta"
+  const nameSheet = e.source.getSheetByName(sheetName);
+
+  const sheetNameRoute = "Rotas"
+  const nameSheetRoute = e.source.getSheetByName(sheetNameRoute);
+
+  let contGrandTotal = 0
+  let contGrandSTD = 0
+  let contGrandEXP = 0
+  
+  let contPartsFortalezaTotal = 0
+  let contPartsFortalezaSTD = 0
+  let contPartsFortalezaEXP = 0
+  
+  let contPartsPriorityFortalezaTotal = 0
+  let contPartsPriorityFortalezaSTD = 0
+  let contPartsPriorityFortalezaEXP = 0
+
+  let contCERTotal = 0
+  let contCERSTD = 0
+  let contCEREXP = 0
+
+  let contSAO = 0
+  let contSLX = 0
+  let contPSX = 0
+  let contBEC = 0
+  let contSOB = 0
+  let contBEP = 0
+  let contBLM = 0
+
+  const routeCounts = {
+    'BHX': 0,'BHI': 0,'BHZ': 0,'BSB': 0,'BSI': 0,
+    'ENP': 0,'JZN': 0,'PTK': 0,'RZN': 0,'RZO': 0,
+    'RZS': 0,'SGI': 0,'VDQ': 0,'SSA': 0,'RRU': 0,
+    'REK': 0,'PRN': 0,'NTA': 0,'JPS': 0,'JPA': 0,
+    'ITN': 0,'FEK': 0,'CER': 0,'AJU': 0,'MAC': 0,
+    'RIO': 0,'VIX': 0
+  };
+  const routeCountsEXP = {
+    'ARP': 0,'AJU': 0,'CER': 0,'FEK': 0,'ITN': 0,
+    'JPA': 0,'JPS': 0,'NTA': 0,'PRN': 0,'REK': 0,
+    'RRU': 0,'SSA': 0,'MAC': 0
+  };
+  const routeCountsSTD = {
+    'BHX': 0,'BHI': 0,'BHZ': 0,'BSB': 0,'BSI': 0,
+    'ENP': 0,'JZN': 0,'PTK': 0,'RZN': 0,'RZO': 0,
+    'RZS': 0,'SGI': 0,'VDQ': 0,'SSA': 0,'RRU': 0,
+    'REK': 0,'PRN': 0,'NTA': 0,'JPS': 0,'JPA': 0,
+    'ITN': 0,'FEK': 0,'CER': 0,'AJU': 0,
+  };
+
+  let rotaCER = [
+      "AJU","ARM","APR","BHI","BHX",
+      "BHZ","BSB","BSI","CER","CMP",
+      "FEK","ITN","JPA","JPS","JZN",
+      "LIN","MAC","MCE","NIG","NTA",
+      "NTR","PRN","PTK","PTS","RAB",
+      "REK","RIO","RRU","RZN","RZO",
+      "RZS","SGI","SGP","SSA","TES",
+      "VDC","VIX","VRO","VVA","VVL",
+      "ZOE","VDQ","ENP"
+  ]
+  
+  //=============== 1º Collect ===============
+
+  const datePriority = nameSheet.getRange("J3").getValue();
+
+  //Grand total
+  const cellI12 = nameSheet.getRange("I12"); //STD
+  const cellJ12 = nameSheet.getRange("J12"); //EXP
+  const cellK12 = nameSheet.getRange("K12"); //TOTAL
+
+  //Parts of Fortaleza
+  const cellI15 = nameSheet.getRange("I15"); //STD
+  const cellJ15 = nameSheet.getRange("J15"); //EXP
+  const cellK15 = nameSheet.getRange("K15"); //TOTAL
+
+  //Parts priority of Fortaleza
+  const cellI18 = nameSheet.getRange("I18"); //STD
+  const cellJ18 = nameSheet.getRange("J18"); //EXP
+  const cellK18 = nameSheet.getRange("K18"); //TOTAL
+
+  //AWB'S CER
+  const cellI21 = nameSheet.getRange("I21"); //STD
+  const cellJ21 = nameSheet.getRange("J21"); //EXP
+  const cellK21 = nameSheet.getRange("K21"); //TOTAL
+
+  //Others
+  const cellI24 = nameSheet.getRange("I24"); //SAO
+  const cellI27 = nameSheet.getRange("I27"); //SLX
+  const cellI30 = nameSheet.getRange("I30"); //PSX
+  const cellI33 = nameSheet.getRange("I33"); //BEC
+  const cellI36 = nameSheet.getRange("I36"); //SOB
+  const cellJ36 = nameSheet.getRange("J36"); //BEP
+  const cellK36 = nameSheet.getRange("K36"); //BLM
+
+  //Message
+  const cellG41 = nameSheet.getRange("G41"); //Photo message with the table
+  const cellG53 = nameSheet.getRange("G53"); //Photo message with the leaf
+  const cellG64 = nameSheet.getRange("G64"); //Photo message with graphic
+  const cellG78 = nameSheet.getRange("G78"); //Photo message with truck 
+
+  //Info Message
+  const cellI3 = nameSheet.getRange("I3").getValue(); //Arrival time
+  const cellJ3 = nameSheet.getRange("J3").getValue(); //Priority Date
+  const cellK3 = nameSheet.getRange("K3").getValue(); //Sheet Quantity
+  const cellL3 = nameSheet.getRange("L3").getValue(); //VRID
+  const cellI5 = nameSheet.getRange("I5").getValue(); //Name
+  const cellJ5 = nameSheet.getRange("J5").getValue(); //Collect STD
+  const cellK5 = nameSheet.getRange("K5").getValue(); //Collect EXP
+  const cellL5 = nameSheet.getRange("L5").getValue(); //Date arrived
+
+
+
+  const valuesA = nameSheet.getRange("A:A").getValues().filter(row => Boolean(row[0])); //Rota completa
+  const valuesB = nameSheet.getRange("B:B").getValues().filter(row => Boolean(row[0])); //Rota principal
+  const valuesC = nameSheet.getRange("C:C").getValues(); //Prioridade
+  const valuesD = nameSheet.getRange("D:D").getValues().filter(row => Boolean(row[0])); //data
+
+
+  for (let i = 0; i < valuesB.length; i++) { 
+      
+    contGrandTotal += 1 // Total 
+    if(valuesC[i] > 0){      
+      contGrandEXP += 1
+      if (routeCountsEXP.hasOwnProperty(valuesB[i])) {
+        routeCountsEXP[valuesB[i]]++;
+      }
+    }else{
+      contGrandSTD += 1
+      if (routeCountsSTD.hasOwnProperty(valuesB[i])) {
+        routeCountsSTD[valuesB[i]]++;
+      }
+    }
+
+    if (!rotaCER.includes(valuesB[i][0]) && valuesB[i] != 'FOR' && valuesB[i] != 'SLX' && valuesB[i] != 'PSX' && valuesB[i] != 'BEC' && valuesB[i] != 'SOB' && valuesB[i] != 'BEP' && valuesB[i] != 'BLM') { //SAO
+      contSAO++;
+    }
+    
+    for(let b = 0; b < rotaCER.length; b++){ //CER
+      if(rotaCER[b] == valuesB[i]){
+        contCERTotal += 1
+        if(valuesC[i] > 0){
+          contCEREXP += 1             
+        }else{
+          contCERSTD += 1
+        }
+      }
+    }   
+    
+    if(valuesB[i] == 'FOR'){ //FOR
+      contPartsFortalezaTotal += 1
+      if(valuesC[i] > 0){
+        contPartsFortalezaEXP += 1
+      }else{
+        contPartsFortalezaSTD += 1
+      }
+      if(datePriority == valuesD[i]){
+        contPartsPriorityFortalezaTotal += 1
+        if(valuesC[i] > 0){
+          contPartsPriorityFortalezaEXP += 1
+        }else{
+          contPartsPriorityFortalezaSTD += 1
+        }
+      }
+    }
+    if(valuesB[i] == 'SLX'){
+      contSLX++
+    }
+    if(valuesB[i] == 'PSX'){
+      contPSX++
+    }
+    if(valuesB[i] == 'BEC'){
+      contBEC++
+    }
+    if(valuesB[i] == 'SOB'){
+      contSOB++
+    }
+    if(valuesB[i] == 'BEP'){
+      contBEP++
+    }
+    if(valuesB[i] == 'BLM'){
+      contBLM++
+    }       
+  }
+
+  cellK12.setValue(contGrandTotal); //Grand total (TOTAL)
+  cellI12.setValue(contGrandSTD) //Grand total (STD)
+  cellJ12.setValue(contGrandEXP) //Grand total (EXP)
+
+  cellK15.setValue(contPartsFortalezaTotal); //Parts of Fortaleza (TOTAL)
+  cellI15.setValue(contPartsFortalezaSTD) //Parts of Fortaleza (STD)
+  cellJ15.setValue(contPartsFortalezaEXP) //Parts of Fortaleza (EXP)
+
+  cellK18.setValue(contPartsPriorityFortalezaTotal); //Parts Priority of Fortaleza (TOTAL)
+  cellI18.setValue(contPartsPriorityFortalezaSTD) //Parts Priority of Fortaleza (STD)
+  cellJ18.setValue(contPartsPriorityFortalezaEXP) //Parts Priority of Fortaleza (EXP)
+
+  cellK21.setValue(contCERTotal); //AWB'S CER (TOTAL)
+  cellI21.setValue(contCERSTD) //AWB'S CERa (STD)
+  cellJ21.setValue(contCEREXP) //AWB'S CER (EXP)
+  
+  cellI24.setValue(contSAO) //SAO
+  cellI27.setValue(contSLX) //SLX
+  cellI30.setValue(contPSX) //PSX
+  cellI33.setValue(contBEC) //BEC
+  cellI36.setValue(contSOB) //SOB
+  cellK36.setValue(contBLM) //SOB
+  cellJ36.setValue(contBEP) //SOB
+  
+  cellG41.setValue(`Coleta Amazon FOR2 -> TEXBR ${cellL5}\n\n1° Coleta Amazon... ${cellI3}h\n\n${cellJ5} STD ${contGrandSTD}\n${cellK5} EXP ${contGrandEXP}\n\nTOTAL: ${contGrandEXP + contGrandSTD}/${contPartsFortalezaTotal}\n\n~${cellI5}.`);
+
+  cellG53.setValue(`O VRID: *${cellL3}* deu exatos *${cellK3}*, porém como sabemos da\ndivergencia que estamos tendo entre VRID e SISTEMA, logo o ICS acusou um valor de *${contGrandTotal}* AWB'\ndeixando um total de *${contGrandTotal - cellK3}* AWB's fora do informativo do VRID.`) 
+
+  cellG64.setValue(`Boa noite, segue aqui os relatórios de Recebimento de turno, AWB's e de\nPeças locais referente as coletas amazon dessa data. *${cellL5}*\n\nMH vem recebendo um total de *${cellK15.getValue()}* peças locais, sendo  elas *${cellI15.getValue()}* STD e *${cellJ15.getValue()}* EXP\ncomo mostrados na tabela acima.\nHoje estamos recebendo um total de *${cellK18.getValue()}* prioridades sendo elas *${cellJ18.getValue()}* EXP e *${cellI18.getValue()}* STD,\na serem entregue no dia seguinte. *${cellJ3}*\n\nSTD: *${cellI12.getValue()}*\nEXP: *${cellJ12.getValue()}*\n\n*AWB'S EXTRAS*: SLX: *${cellI27.getValue()}* | PSX: *${cellI30.getValue()}* | BEC: *${cellI33.getValue()}* | SOB: *${cellI36.getValue()}* | BEP: *${cellJ36.getValue()}* | BLM: *${cellK36.getValue()}*\n\n~${cellI5}.`)
+
+  cellG78.setValue(`Coleta FOR2-FOR -> TEXBR ${cellL5}\nHorario: ${cellI3}\nVRID: ${cellL3}\nQntd: ${cellK3}.`)
+
+  //EXP
+  for (let key in routeCountsEXP) {
+    if (routeCountsEXP.hasOwnProperty(key)) {
+      const cellRouter = nameSheetRoute.getRange("A" + (1 + Object.keys(routeCountsEXP).indexOf(key)));
+      const cell = nameSheetRoute.getRange("B" + (1 + Object.keys(routeCountsEXP).indexOf(key)));
+      if (key == 'ARP') {
+        routeCountsEXP['MAC'] += routeCountsEXP['ARP'];
+        routeCountsEXP['ARP'] = 0
+      } else{
+        cellRouter.setValue(key);
+        cell.setValue(routeCountsEXP[key]);
+      }
+    }
+  }
+  //STD
+  for (let key in routeCountsSTD) {
+    if (routeCountsSTD.hasOwnProperty(key)) {
+      const cellRouter = nameSheetRoute.getRange("C" + (2 + Object.keys(routeCountsSTD).indexOf(key)));
+      cellRouter.setValue(key);
+      const cell = nameSheetRoute.getRange("D" + (2 + Object.keys(routeCountsSTD).indexOf(key)));
+      cell.setValue(routeCountsSTD[key]);
+    }
+  }
+  //=============== 2º Collect ===============
+  contGrandTotal = 0
+  contGrandSTD = 0
+  contGrandEXP = 0
+  
+  contPartsFortalezaTotal = 0
+  contPartsFortalezaSTD = 0
+  contPartsFortalezaEXP = 0
+  
+  contPartsPriorityFortalezaTotal = 0
+  contPartsPriorityFortalezaSTD = 0
+  contPartsPriorityFortalezaEXP = 0
+
+  contCERTotal = 0
+  contCERSTD = 0
+  contCEREXP = 0
+
+  contSAO = 0
+  contSLX = 0
+  contPSX = 0
+  contBEC = 0
+  contSOB = 0
+  contBEP = 0
+  contBLM = 0
+
+  //Grand total
+  const cellW12 = nameSheet.getRange("W12"); //STD
+  const cellX12 = nameSheet.getRange("X12"); //EXP
+  const cellY12 = nameSheet.getRange("Y12"); //TOTAL
+
+  //Parts of Fortaleza
+  const cellW15 = nameSheet.getRange("W15"); //STD
+  const cellX15 = nameSheet.getRange("X15"); //EXP
+  const cellY15 = nameSheet.getRange("Y15"); //TOTAL
+
+  //Parts priority of Fortaleza
+  const cellW18 = nameSheet.getRange("W18"); //STD
+  const cellX18 = nameSheet.getRange("X18"); //EXP
+  const cellY18 = nameSheet.getRange("Y18"); //TOTAL
+
+  //AWB'S CER
+  const cellW21 = nameSheet.getRange("W21"); //STD
+  const cellX21 = nameSheet.getRange("X21"); //EXP
+  const cellY21 = nameSheet.getRange("Y21"); //TOTAL
+
+  //Others
+  const cellW24 = nameSheet.getRange("W24"); //SAO
+  const cellW27 = nameSheet.getRange("W27"); //SLX
+  const cellW30 = nameSheet.getRange("W30"); //PSX
+  const cellW33 = nameSheet.getRange("W33"); //BEC
+  const cellW36 = nameSheet.getRange("W36"); //SOB
+  const cellX36 = nameSheet.getRange("X36"); //BEP
+  const cellY36 = nameSheet.getRange("Y36"); //BLM
+
+  //Message
+  const cellU41 = nameSheet.getRange("U41"); //Photo message with the table
+  const cellU56 = nameSheet.getRange("U56"); //Photo message with the leaf
+  const cellU67 = nameSheet.getRange("U67"); //Photo message with graphic
+  const cellU81 = nameSheet.getRange("U81"); //Photo message with truck 
+
+  //Info Message
+  const cellX3 = nameSheet.getRange("X3").getValue(); //Arrival time
+  const cellY3 = nameSheet.getRange("Y3").getValue(); //Sheet Quantity
+  const cellZ3 = nameSheet.getRange("Z3").getValue(); //VRID
+  const cellX5 = nameSheet.getRange("X5").getValue(); //Collect STD
+  const cellY5 = nameSheet.getRange("Y5").getValue(); //Collect EXP
+  const cellZ5 = nameSheet.getRange("Z5").getValue(); //Date arrived
+
+
+
+  const valuesO = nameSheet.getRange("O:O").getValues().filter(row => Boolean(row[0])); //Rota completa
+  const valuesP = nameSheet.getRange("P:P").getValues().filter(row => Boolean(row[0])); //Rota principal
+  const valuesQ = nameSheet.getRange("Q:Q").getValues(); //Prioridade
+  const valuesR = nameSheet.getRange("R:R").getValues(); //data
+
+
+  for (let i = 0; i < valuesP.length; i++) { 
+      
+      contGrandTotal += 1 // Total 
+      if(valuesQ[i] > 0){      
+        contGrandEXP += 1
+      }else{
+        contGrandSTD += 1
+      }
+
+      if (!rotaCER.includes(valuesP[i][0]) && valuesP[i] != 'FOR' && valuesP[i] != 'SLX' && valuesP[i] != 'PSX' && valuesP[i] != 'BEC' && valuesP[i] != 'SOB') { //SAO
+        contSAO++;
+      }
+      
+      for(let b = 0; b < rotaCER.length; b++){ //CER
+        if(rotaCER[b] == valuesP[i]){
+          contCERTotal += 1
+          if(valuesQ[i] > 0){
+            contCEREXP += 1
+          }else{
+            contCERSTD += 1
+          }
+        }
+      }   
+      
+      if(valuesP[i] == 'FOR'){ //FOR
+        contPartsFortalezaTotal++
+        if(valuesQ[i] > 0){
+          contPartsFortalezaSTD++
+        }else{
+          contPartsFortalezaEXP++
+        }
+        if(datePriority == valuesR[i]){
+          contPartsPriorityFortalezaTotal += 1
+          if(valuesQ[i] > 0){
+            contPartsPriorityFortalezaEXP += 1
+          }else{
+            contPartsPriorityFortalezaSTD += 1
+          }
+        }
+
+      }
+      if(valuesP[i] == 'SLX'){
+        contSLX++
+      }
+      if(valuesP[i] == 'PSX'){
+        contPSX++
+      }
+      if(valuesP[i] == 'BEC'){
+        contBEC++
+      }
+      if(valuesP[i] == 'SOB'){
+        contSOB++
+      }
+      if(valuesP[i] == 'BEP'){
+        contBEP++
+      }
+      if(valuesP[i] == 'BLM'){
+        contBLM++
+      }
+  }
+
+  cellY12.setValue(contGrandTotal); //Grand total (TOTAL)
+  cellW12.setValue(contGrandSTD) //Grand total (STD)
+  cellX12.setValue(contGrandEXP) //Grand total (EXP)
+
+  cellY15.setValue(contPartsFortalezaTotal); //Parts of Fortaleza (TOTAL)
+  cellW15.setValue(contPartsFortalezaSTD) //Parts of Fortaleza (STD)
+  cellX15.setValue(contPartsFortalezaEXP) //Parts of Fortaleza (EXP)
+
+  cellY18.setValue(contPartsPriorityFortalezaTotal); //Parts Priority of Fortaleza (TOTAL)
+  cellW18.setValue(contPartsPriorityFortalezaSTD) //Parts Priority of Fortaleza (STD)
+  cellX18.setValue(contPartsPriorityFortalezaEXP) //Parts Priority of Fortaleza (EXP)
+
+  cellY21.setValue(contCERTotal); //AWB'S CER (TOTAL)
+  cellW21.setValue(contCERSTD) //AWB'S CER (STD)
+  cellX21.setValue(contCEREXP) //AWB'S CER (EXP)
+  
+  cellW24.setValue(contSAO) //SAO
+  cellW27.setValue(contSLX) //SLX
+  cellW30.setValue(contPSX) //PSX
+  cellW33.setValue(contBEC) //BEC
+  cellW36.setValue(contSOB) //SOB
+  cellX36.setValue(contBEP) //BEP
+  cellY36.setValue(contBLM) //BLM
+  
+  
+  cellU41.setValue(`Coleta Amazon FOR2 -> TEXBR ${cellL5}\n\n1° Coleta Amazon... ${cellI3}h ${cellK12.getValue()}/${cellK15.getValue()}\n\n${cellJ5} STD ${cellI12.getValue()}\n ${cellK5} EXP ${cellJ12.getValue()}\n\n2° Coleta Amazon... ${cellX3}h ${cellY12.getValue()}/${cellY15.getValue()}\n\n${cellX5} STD ${cellW12.getValue()}\n ${cellY5} EXP ${cellX12.getValue()}\n\nTOTAL: ${cellY12.getValue() + cellK12.getValue()}/${cellY15.getValue() + cellK15.getValue()}\n\n~${cellI5}.`);
+
+  cellU56.setValue(`Os 1° VRID: *${cellL3} (${cellK3})* / *${cellZ3} (${cellY3})* somados deram exatos *${cellK3 + cellY3}*, porém como sabemos da\ndivergencia que estamos tendo entre VRID e SISTEMA, logo o ICS acusou um valor de *${cellY12.getValue() + cellK12.getValue()}* AWB'\ndeixando um total de *${(cellY12.getValue() + cellK12.getValue() - (cellK3 + cellY3))}* AWB's fora do informativo do VRID.`) 
+
+  cellU67.setValue(`Boa noite, segue aqui os relatórios de Recebimento de turno, AWB's e de\nPeças locais referente as coletas amazon dessa data. *${cellL5}*\n\nMH vem recebendo um total de *${cellK15.getValue() + cellY15.getValue()}* peças locais, sendo  elas *${cellI15.getValue() + cellW15.getValue()}* STD e *${cellJ15.getValue() + cellX15.getValue()}* EXP\ncomo mostrados na tabela acima.\nHoje estamos recebendo um total de *${cellK18.getValue() + cellY18.getValue()}* prioridades sendo elas *${cellJ18.getValue() + cellX18.getValue()}* EXP e *${cellI18.getValue() + cellW18.getValue()}* STD,\na serem entregue no dia seguinte. *${cellJ3}*\n\nSTD: *${cellI12.getValue() + cellW12.getValue()}*\nEXP: *${cellJ12.getValue() + cellX12.getValue()}*\n\n*AWB'S EXTRAS*: SLX: *${cellI27.getValue() + cellW27.getValue()}* | PSX: *${cellI30.getValue() + cellW30.getValue()}* | BEC: *${cellI33.getValue() + cellW33.getValue()}* | SOB: *${cellI36.getValue() + cellW36.getValue()}* | BEP: *${cellJ36.getValue() + cellX36.getValue()}* | BLM: *${cellK36.getValue() + cellY36.getValue()}*\n\n~${cellI5}.`)
+
+  cellU81.setValue(`Coleta FOR2-FOR -> TEXBR ${cellL5}\nHorario: ${cellI3}\nVRID: ${cellL3}\nQntd: ${cellK3}\n\nColeta FOR2-FOR -> TEXBR ${cellZ5}\nHorario: ${cellX3}\nVRID: ${cellZ3}\nQntd: ${cellY3}.`)
+
+  GetForGraphic();
+}
+function GetForGraphic() {
+  var planilha = SpreadsheetApp.getActiveSpreadsheet();
+  var folhaColeta = planilha.getSheetByName("Coleta");
+  var folhaGraficoFor = planilha.getSheetByName("GraficoFor");
+
+  // Limpa a folha "GraficoFor"
+  folhaGraficoFor.clearContents();
+
+  const cellA1 = folhaGraficoFor.getRange("A1"); //route
+  const cellB1 = folhaGraficoFor.getRange("B1"); //branch
+  const cellC1 = folhaGraficoFor.getRange("C1"); //Priority
+  const cellD1 = folhaGraficoFor.getRange("D1"); //Date
+
+  cellA1.setValue("Rota")
+  cellB1.setValue("Filial")
+  cellC1.setValue("Prioridade")
+  cellD1.setValue("Data")
+
+  var dadosColeta = folhaColeta.getDataRange().getValues();
+  var dadosGraficoFor = [];
+
+  for (var i = 0; i < dadosColeta.length; i++) {
+    var valorColunaA = dadosColeta[i][0]; // Valor na coluna A da folha "Coleta"
+    var valorColunaB = dadosColeta[i][1]; // Valor na coluna B da folha "Coleta"
+    var valorColunaC = dadosColeta[i][2]; // Valor na coluna C da folha "Coleta"
+    var valorColunaD = dadosColeta[i][3]; // Valor na coluna D da folha "Coleta"
+
+    if (valorColunaB === "FOR") {
+      // Use expressão regular para extrair o valor entre colchetes na coluna A da folha "Coleta"
+      var resultado = valorColunaA.match(/\[([^\]]+)\]/);
+
+      if (resultado) {
+        var parametro = resultado[1].trim(); // Remove espaços em branco antes e depois do valor
+        dadosGraficoFor.push([parametro, valorColunaB, valorColunaC, valorColunaD]);
+      }
+    }
+  }
+
+  // Cola os valores na coluna A, B, C e D da folha "GraficoFor"
+  if (dadosGraficoFor.length > 0) {
+    folhaGraficoFor.getRange(2, 1, dadosGraficoFor.length, 4).setValues(dadosGraficoFor);
+  }
+}
